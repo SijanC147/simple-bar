@@ -74,12 +74,12 @@ export default function SimpleBarContextProvider({
       return id === adjustedUbersichtDisplayId;
     }) || {};
 
-  // Determine the display index for context value
+  // Determine the screen index for context value
   // currentDisplay.index is from yabai
-  // Aerospace.getDisplayIndex is from Aerospace with custom logic
-  // Fallback to Aerospace monitor-id or default to 1
+  // Aerospace.getScreenIndex is from Aerospace with custom logic
+  // Fallback to Aerospace monitor-appkit-nsscreen-screens-id or default to 1
   const displayIndex =
-    (currentDisplay.index ?? Aerospace.getDisplayIndex(currentDisplay)) || 1;
+    (currentDisplay.index ?? Aerospace.getScreenIndex(currentDisplay)) || 1;
 
   const pushMissive = (newMissive) => {
     const now = Date.now();
