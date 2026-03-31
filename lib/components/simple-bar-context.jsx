@@ -43,7 +43,6 @@ export default function SimpleBarContextProvider({
   const { windowManager, enableServer, yabaiServerRefresh } = settings.global;
   const serverEnabled = enableServer && yabaiServerRefresh;
   const isYabai = windowManager === "yabai";
-  const isAeroSpace = windowManager === "aerospace";
 
   const currentDisplays = serverEnabled && isYabai ? _displays : displays;
 
@@ -52,34 +51,26 @@ export default function SimpleBarContextProvider({
     10
   );
 
-  // Check if the built-in Retina Display is present in the current displays
-  const hasBuiltInRetina = currentDisplays?.some(
-    (d) => d["monitor-name"] === "Built-in Retina Display"
-  );
+  // Find the current display by walking down from ubersichtDisplayId
+  // until we find a match. This handles phantom displays (closed lid,
+  // previously connected monitors) that Übersicht still counts but
+  // AeroSpace doesn't report.
+  let currentDisplay = {};
+  let displayIndex = 1;
 
-  // Adjust displayId if the Retina screen is missing when using AeroSpace
-  // This prevents mismatch between Übersicht and AeroSpace display numbering
-  // as Übersicht still count closed built in screen in the display count
-  const adjustedUbersichtDisplayId =
-    isAeroSpace && !hasBuiltInRetina
-      ? ubersichtDisplayId - 1
-      : ubersichtDisplayId;
-
-  // Find the current display based on the adjusted display ID
-  // Use Aerospace's display index if available (check for custom logic)
-  // Fallback to yabai id otherwise
-  const currentDisplay =
-    currentDisplays?.find((d) => {
+  for (let candidateId = ubersichtDisplayId; candidateId >= 1; candidateId--) {
+    const display = currentDisplays?.find((d) => {
       const id = Aerospace.getDisplayIndex(d) ?? d.id;
-      return id === adjustedUbersichtDisplayId;
-    }) || {};
+      return id === candidateId;
+    });
 
-  // Determine the screen index for context value
-  // currentDisplay.index is from yabai
-  // Aerospace.getScreenIndex is from Aerospace with custom logic
-  // Fallback to Aerospace monitor-appkit-nsscreen-screens-id or default to 1
-  const displayIndex =
-    (currentDisplay.index ?? Aerospace.getScreenIndex(currentDisplay)) || 1;
+    if (display) {
+      currentDisplay = display;
+      displayIndex =
+        display.index ?? Aerospace.getScreenIndex(display) ?? 1;
+      break;
+    }
+  }
 
   const pushMissive = (newMissive) => {
     const now = Date.now();
