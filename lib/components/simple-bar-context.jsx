@@ -39,11 +39,11 @@ export default function SimpleBarContextProvider({
   const [settings, setSettings] = React.useState(initialSettings);
   const [_displays, setDisplays] = React.useState(displays);
   const [missives, setMissives] = React.useState([]);
+  const [ubersichtScreens, setUbersichtScreens] = React.useState([]);
 
   const { windowManager, enableServer, yabaiServerRefresh } = settings.global;
   const serverEnabled = enableServer && yabaiServerRefresh;
   const isYabai = windowManager === "yabai";
-  const isAeroSpace = windowManager === "aerospace";
 
   const currentDisplays = serverEnabled && isYabai ? _displays : displays;
 
@@ -52,34 +52,39 @@ export default function SimpleBarContextProvider({
     10
   );
 
-  // Check if the built-in Retina Display is present in the current displays
-  const hasBuiltInRetina = currentDisplays?.some(
-    (d) => d["monitor-name"] === "Built-in Retina Display"
-  );
 
-  // Adjust displayId if the Retina screen is missing when using AeroSpace
-  // This prevents mismatch between Übersicht and AeroSpace display numbering
-  // as Übersicht still count closed built in screen in the display count
-  const adjustedUbersichtDisplayId =
-    isAeroSpace && !hasBuiltInRetina
-      ? ubersichtDisplayId - 1
-      : ubersichtDisplayId;
+  // Fetch Übersicht's active screen list from /state/
+  React.useEffect(() => {
+    let cancelled = false;
+    fetch("/state/")
+      .then((response) => response.json())
+      .then((state) => {
+        if (!cancelled) {
+          setUbersichtScreens(state.screens || []);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+    // Re-run this effect whenever the displays change, as the screen order might be different
+  }, [displays]);
 
-  // Find the current display based on the adjusted display ID
-  // Use Aerospace's display index if available (check for custom logic)
-  // Fallback to yabai id otherwise
+  // Derive the current display rank from the active Übersicht screen order.
+  // This handles phantom displays (closed lid, previously connected monitors)
+  // that Übersicht still counts but AeroSpace doesn't report.
+  const currentScreenRank = ubersichtScreens.indexOf(ubersichtDisplayId) + 1;
+
+  // Match the current display using either the yabai display ID or AeroSpace's custom display index logic.
   const currentDisplay =
-    currentDisplays?.find((d) => {
-      const id = Aerospace.getDisplayIndex(d) ?? d.id;
-      return id === adjustedUbersichtDisplayId;
-    }) || {};
+    currentDisplays?.find(
+      (display) => isYabai ? display.id === ubersichtDisplayId : Aerospace.getDisplayIndex(display) === currentScreenRank
+    ) || {};
 
   // Determine the display index for context value
   // currentDisplay.index is from yabai
-  // Aerospace.getDisplayIndex is from Aerospace with custom logic
-  // Fallback to Aerospace monitor-id or default to 1
-  const displayIndex =
-    (currentDisplay.index ?? Aerospace.getDisplayIndex(currentDisplay)) || 1;
+  // Aerospace.getDisplayIndex is from AeroSpace with custom logic
+  // Fallback to AeroSpace monitor-appkit-nsscreen-screens-id or default to 1
+  const displayIndex = currentDisplay.index ?? Aerospace.getDisplayIndex(currentDisplay) ?? 1;
 
   const pushMissive = (newMissive) => {
     const now = Date.now();
