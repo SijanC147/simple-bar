@@ -27,12 +27,11 @@ const { React } = Uebersicht;
 const DEFAULT_REFRESH_FREQUENCY = 60000; // 1 minute
 
 // Timing thresholds (in minutes)
-const URGENT_THRESHOLD = 5;      // Red pulsing when ≤5 min until meeting
-const UPCOMING_THRESHOLD = 15;   // Yellow when ≤15 min until meeting
-const IN_PROGRESS_CUTOFF = 15;   // Stop showing meeting after 15 min in progress (handled by shell script)
+const URGENT_THRESHOLD = 5; // Red pulsing when ≤5 min until meeting
+const UPCOMING_THRESHOLD = 15; // Yellow when ≤15 min until meeting
 
 // Uses icalBuddy for fast calendar access (handles recurring events properly)
-// Note: Shell script automatically skips meetings that started > IN_PROGRESS_CUTOFF minutes ago
+// Note: Shell script automatically skips meetings that started more than 15 minutes ago
 const BASE_COMMAND = `./simple-bar/lib/scripts/next-meeting.sh`;
 
 /**
@@ -45,7 +44,7 @@ function buildCommand(icalBuddyPath, lookAheadHours) {
   const hours = lookAheadHours || 12;
   if (icalBuddyPath && icalBuddyPath.trim()) {
     // Escape special shell characters to prevent injection
-    const safePath = icalBuddyPath.replace(/["$`\\]/g, '\\$&');
+    const safePath = icalBuddyPath.replace(/["$`\\]/g, "\\$&");
     return `${BASE_COMMAND} "${safePath}" ${hours}`;
   }
   return `${BASE_COMMAND} "" ${hours}`;
@@ -60,7 +59,8 @@ const MEETING_URL_PATTERNS = [
 ];
 
 // SafeLinks pattern (Microsoft Outlook protection wrapper)
-const SAFELINKS_PATTERN = /https?:\/\/[\w.-]*safelinks\.protection\.outlook\.com\/[^\s<>">\]]+/gi;
+const SAFELINKS_PATTERN =
+  /https?:\/\/[\w.-]*safelinks\.protection\.outlook\.com\/[^\s<>">\]]+/gi;
 
 /**
  * Decode a URL that may be URL-encoded
@@ -149,7 +149,7 @@ function formatTimeUntil(minutes) {
 }
 
 /**
- * Parse meeting data from AppleScript output
+ * Parse meeting data from shell script output
  * @param {string} output - Raw command output
  * @returns {Object|null} Meeting object or null
  */
@@ -188,7 +188,7 @@ const JoinButton = React.memo(({ url }) => {
     e.stopPropagation();
     Utils.clickEffect(e);
     // Escape special shell characters to prevent injection
-    const safeUrl = url.replace(/["$`\\]/g, '\\$&');
+    const safeUrl = url.replace(/["$`\\]/g, "\\$&");
     await Uebersicht.run(`open "${safeUrl}"`);
   };
 
@@ -215,14 +215,20 @@ export const Widget = React.memo(() => {
   const { displayIndex, settings } = useSimpleBarContext();
   const { widgets, nextMeetingWidgetOptions, dateWidgetOptions } = settings;
   const { nextMeetingWidget } = widgets;
-  const { refreshFrequency, showOnDisplay, showJoinButton, showTimeOnly, icalBuddyPath, lookAheadHours } =
-    nextMeetingWidgetOptions;
+  const {
+    refreshFrequency,
+    showOnDisplay,
+    showJoinButton,
+    showTimeOnly,
+    icalBuddyPath,
+    lookAheadHours,
+  } = nextMeetingWidgetOptions;
 
   // Calculate the refresh frequency for the widget
   const refresh = React.useMemo(
     () =>
       Utils.getRefreshFrequency(refreshFrequency, DEFAULT_REFRESH_FREQUENCY),
-    [refreshFrequency]
+    [refreshFrequency],
   );
 
   // Determine if the widget should be visible based on display settings
@@ -251,6 +257,7 @@ export const Widget = React.memo(() => {
       const meeting = parseMeetingData(output);
       setState(meeting);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error fetching next meeting:", error);
       setState(null);
     }
@@ -268,9 +275,8 @@ export const Widget = React.memo(() => {
 
   const { title, minutesUntil, url } = state;
   const timeDisplay = formatTimeUntil(minutesUntil);
-  const isInProgress = minutesUntil < 0;
-  const isUrgent = minutesUntil <= URGENT_THRESHOLD;      // Red pulsing: ≤5 min or in progress (up to 15 min)
-  const isUpcoming = minutesUntil <= UPCOMING_THRESHOLD;  // Yellow: ≤15 min (but not urgent/in-progress)
+  const isUrgent = minutesUntil <= URGENT_THRESHOLD; // Red pulsing: ≤5 min or in progress (up to 15 min)
+  const isUpcoming = minutesUntil <= UPCOMING_THRESHOLD; // Yellow: ≤15 min (but not urgent/in-progress)
 
   const widgetClasses = Utils.classNames("next-meeting", {
     "next-meeting--urgent": isUrgent,
@@ -292,6 +298,7 @@ export const Widget = React.memo(() => {
       classes={widgetClasses}
       Icon={Icons.Calendar}
       onClick={openCalendar}
+      useDivForClick
     >
       {!showTimeOnly && <span className="next-meeting__title">{title}</span>}
       <span className="next-meeting__time">{timeDisplay}</span>

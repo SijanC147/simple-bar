@@ -18,6 +18,7 @@ const { React } = Uebersicht;
  * @param {Object} props.style - The style object.
  * @param {boolean} props.disableSlider - Flag to disable the slider effect.
  * @param {boolean} props.showSpecter - Flag to show the specter widget.
+ * @param {boolean} props.useDivForClick - Render a div for click handling instead of a button.
  * @param {React.ReactNode} props.children - The child elements to render inside the widget.
  * @returns {React.ReactElement} The rendered widget component.
  */
@@ -31,13 +32,16 @@ export function Widget({
   style,
   disableSlider,
   showSpecter,
+  useDivForClick,
   children,
 }) {
   const ref = React.useRef();
 
   let Tag = "div";
-  if (onClick) Tag = "button";
   if (href) Tag = "a";
+  if (onClick && !href && !useDivForClick) Tag = "button";
+
+  const renderDivButton = Tag === "div" && Boolean(onClick);
 
   const dataWidgetClasses = Utils.classNames("data-widget", classes, {
     "data-widget--clickable": href || onClick,
@@ -60,7 +64,7 @@ export function Widget({
     Utils.startSliding(
       ref.current,
       ".data-widget__inner",
-      ".data-widget__slider"
+      ".data-widget__slider",
     );
   };
 
@@ -71,12 +75,25 @@ export function Widget({
     Utils.stopSliding(ref.current, ".data-widget__slider");
   };
 
+  /**
+   * Handles keyboard interaction for div-based clickable widgets.
+   * @param {KeyboardEvent} e - The keyboard event.
+   */
+  const onKeyDown = (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    onClickProp(e);
+  };
+
   return (
     <Tag
       ref={ref}
       className={dataWidgetClasses}
       href={href}
       onClick={onClickProp}
+      role={renderDivButton ? "button" : undefined}
+      tabIndex={renderDivButton ? 0 : undefined}
+      onKeyDown={renderDivButton ? onKeyDown : undefined}
       onContextMenu={onRightClick || undefined}
       onMouseEnter={!disableSlider ? onMouseEnter : undefined}
       onMouseLeave={!disableSlider ? onMouseLeave : undefined}

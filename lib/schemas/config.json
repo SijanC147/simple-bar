@@ -403,6 +403,10 @@
         "notificationsWidget": {
           "type": "boolean",
           "description": "Hide or show the notification badges widget"
+        },
+        "nextMeetingWidget": {
+          "type": "boolean",
+          "description": "Hide or show the next meeting widget"
         }
       }
     },
@@ -1024,6 +1028,36 @@
         "showOnDisplay": {
           "type": "string",
           "description": "The displays on which the process will be displayed. Add a list of indexes (for example: \"1,2\"). Leave blank to display the widget on every spaces"
+        }
+      }
+    },
+    "nextMeetingWidgetOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "refreshFrequency": {
+          "type": "number",
+          "description": "The refresh frequency of this widget in milliseconds"
+        },
+        "showOnDisplay": {
+          "type": "string",
+          "description": "The displays on which the process will be displayed. Add a list of indexes (for example: \"1,2\"). Leave blank to display the widget on every spaces"
+        },
+        "showJoinButton": {
+          "type": "boolean",
+          "description": "Show or hide the join button"
+        },
+        "showTimeOnly": {
+          "type": "boolean",
+          "description": "Hide the meeting title and show only time"
+        },
+        "icalBuddyPath": {
+          "type": "string",
+          "description": "Optional path to the icalBuddy binary"
+        },
+        "lookAheadHours": {
+          "type": "number",
+          "description": "Number of hours to look ahead for upcoming meetings"
         }
       }
     },

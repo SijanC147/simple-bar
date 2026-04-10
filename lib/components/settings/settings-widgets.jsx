@@ -19,6 +19,7 @@ const settingsKeys = {
   mpdWidget: "mpdWidgetOptions",
   musicWidget: "musicWidgetOptions",
   netstatsWidget: "netstatsWidgetOptions",
+  nextMeetingWidget: "nextMeetingWidgetOptions",
   notificationsWidget: "notificationsWidgetOptions",
   soundWidget: "soundWidgetOptions",
   spotifyWidget: "spotifyWidgetOptions",
