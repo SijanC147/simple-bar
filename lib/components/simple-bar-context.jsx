@@ -49,25 +49,31 @@ export default function SimpleBarContextProvider({
 
   const ubersichtDisplayId = parseInt(
     window.location.pathname.replace("/", ""),
-    10
+    10,
   );
-
 
   // Fetch Übersicht's active screen list from /state/
   React.useEffect(() => {
-    let cancelled = false;
-    fetch("/state/")
-      .then((response) => response.json())
-      .then((state) => {
-        if (!cancelled) {
-          setUbersichtScreens(state.screens || []);
+    if (isYabai) return undefined;
+
+    const controller = new AbortController();
+
+    const loadScreens = async () => {
+      try {
+        const response = await fetch("/state/", { signal: controller.signal });
+        if (!response.ok) throw new Error("Failed to load /state/");
+        const state = await response.json();
+        setUbersichtScreens(Array.isArray(state?.screens) ? state.screens : []);
+      } catch (error) {
+        if (error?.name !== "AbortError") {
+          setUbersichtScreens([]);
         }
-      });
-    return () => {
-      cancelled = true;
+      }
     };
-    // Re-run this effect whenever the displays change, as the screen order might be different
-  }, [displays]);
+
+    loadScreens();
+    return () => controller.abort();
+  }, [displays, isYabai]);
 
   // Derive the current display rank from the active Übersicht screen order.
   // This handles phantom displays (closed lid, previously connected monitors)
@@ -76,15 +82,18 @@ export default function SimpleBarContextProvider({
 
   // Match the current display using either the yabai display ID or AeroSpace's custom display index logic.
   const currentDisplay =
-    currentDisplays?.find(
-      (display) => isYabai ? display.id === ubersichtDisplayId : Aerospace.getDisplayIndex(display) === currentScreenRank
+    currentDisplays?.find((display) =>
+      isYabai
+        ? display.id === ubersichtDisplayId
+        : Aerospace.getDisplayIndex(display) === currentScreenRank,
     ) || {};
 
   // Determine the display index for context value
   // currentDisplay.index is from yabai
   // Aerospace.getDisplayIndex is from AeroSpace with custom logic
   // Fallback to AeroSpace monitor-appkit-nsscreen-screens-id or default to 1
-  const displayIndex = currentDisplay.index ?? Aerospace.getDisplayIndex(currentDisplay) ?? 1;
+  const displayIndex =
+    currentDisplay.index ?? Aerospace.getDisplayIndex(currentDisplay) ?? 1;
 
   const pushMissive = (newMissive) => {
     const now = Date.now();
