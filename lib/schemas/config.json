@@ -399,6 +399,10 @@
         "browserTrackWidget": {
           "type": "boolean",
           "description": "Hide or show the browser track widget"
+        },
+        "notificationsWidget": {
+          "type": "boolean",
+          "description": "Hide or show the notification badges widget"
         }
       }
     },
@@ -1006,6 +1010,20 @@
         "showSpecter": {
           "type": "boolean",
           "description": "Show the specter animation when a song is playing"
+        }
+      }
+    },
+    "notificationsWidgetOptions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "refreshFrequency": {
+          "type": "number",
+          "description": "The refresh frequency of this widget in milliseconds"
+        },
+        "showOnDisplay": {
+          "type": "string",
+          "description": "The displays on which the process will be displayed. Add a list of indexes (for example: \"1,2\"). Leave blank to display the widget on every spaces"
         }
       }
     },

@@ -110,13 +110,14 @@ export const Widget = React.memo(() => {
 
   // Determine if the widget should be visible based on display settings
   const visible =
-    Utils.isVisibleOnDisplay(displayIndex, showOnDisplay) && notificationsWidget;
+    Utils.isVisibleOnDisplay(displayIndex, showOnDisplay) &&
+    notificationsWidget;
 
   // Calculate the refresh frequency for the widget
   const refresh = React.useMemo(
     () =>
       Utils.getRefreshFrequency(refreshFrequency, DEFAULT_REFRESH_FREQUENCY),
-    [refreshFrequency]
+    [refreshFrequency],
   );
 
   const [state, setState] = React.useState([]);
@@ -136,18 +137,25 @@ export const Widget = React.memo(() => {
   const getNotifications = React.useCallback(async () => {
     if (!visible) return;
     try {
-      const output = await Uebersicht.run(COMMAND);
+      const output = await Utils.cachedRun(COMMAND, refresh);
       const notifications = parseNotifications(output);
       setState(notifications);
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error("Error fetching notifications:", error);
       setState([]);
     }
     setLoading(false);
-  }, [visible]);
+  }, [visible, refresh]);
 
   // Server socket for real-time updates
-  useServerSocket("notifications", visible, getNotifications, resetWidget, setLoading);
+  useServerSocket(
+    "notifications",
+    visible,
+    getNotifications,
+    resetWidget,
+    setLoading,
+  );
 
   // Refresh the widget at the specified interval
   useWidgetRefresh(visible, getNotifications, refresh);

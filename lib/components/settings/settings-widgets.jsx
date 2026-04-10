@@ -19,6 +19,7 @@ const settingsKeys = {
   mpdWidget: "mpdWidgetOptions",
   musicWidget: "musicWidgetOptions",
   netstatsWidget: "netstatsWidgetOptions",
+  notificationsWidget: "notificationsWidgetOptions",
   soundWidget: "soundWidgetOptions",
   spotifyWidget: "spotifyWidgetOptions",
   stockWidget: "stockWidgetOptions",
