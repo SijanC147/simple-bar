@@ -37,9 +37,13 @@ function AerospaceContextProvider({ children }) {
 
   // State to store aerospace spaces
   const [aerospaceSpaces, setAerospaceSpaces] = React.useState([]);
+  const latestRequestRef = React.useRef(0);
 
   // Fetches and sets the aerospace spaces
   const getSpaces = React.useCallback(async () => {
+    const requestId = latestRequestRef.current + 1;
+    latestRequestRef.current = requestId;
+
     let focusedWindow = {};
     const [focusedSpace] = await Aerospace.getFocusedSpace();
     try {
@@ -68,6 +72,9 @@ function AerospaceContextProvider({ children }) {
         );
       })
     );
+    if (requestId !== latestRequestRef.current) {
+      return;
+    }
     setAerospaceSpaces(spaces.flat());
   }, [displays]);
 
