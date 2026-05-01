@@ -1028,6 +1028,10 @@
         "showOnDisplay": {
           "type": "string",
           "description": "The displays on which the process will be displayed. Add a list of indexes (for example: \"1,2\"). Leave blank to display the widget on every spaces"
+        },
+        "excludedApps": {
+          "type": "string",
+          "description": "Comma-separated list of app names to exclude from the notifications widget (e.g. \"BetterTouchTool, Xcode\")"
         }
       }
     },

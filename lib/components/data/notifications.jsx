@@ -106,7 +106,7 @@ export const Widget = React.memo(() => {
   const { displayIndex, settings } = useSimpleBarContext();
   const { widgets, notificationsWidgetOptions } = settings;
   const { notificationsWidget } = widgets;
-  const { refreshFrequency, showOnDisplay } = notificationsWidgetOptions;
+  const { refreshFrequency, showOnDisplay, excludedApps } = notificationsWidgetOptions;
 
   // Determine if the widget should be visible based on display settings
   const visible =
@@ -131,6 +131,18 @@ export const Widget = React.memo(() => {
     setLoading(false);
   }, []);
 
+  // Build the exclusion list from the comma-separated setting
+  const exclusionList = React.useMemo(
+    () =>
+      excludedApps
+        ? excludedApps
+            .split(",")
+            .map((s) => s.trim().toLowerCase())
+            .filter(Boolean)
+        : [],
+    [excludedApps],
+  );
+
   /**
    * Fetches notification badges and updates the state.
    */
@@ -138,7 +150,9 @@ export const Widget = React.memo(() => {
     if (!visible) return;
     try {
       const output = await Utils.cachedRun(COMMAND, refresh);
-      const notifications = parseNotifications(output);
+      const notifications = parseNotifications(output).filter(
+        (item) => !exclusionList.includes(item.name.toLowerCase()),
+      );
       setState(notifications);
     } catch (error) {
       // eslint-disable-next-line no-console
@@ -146,7 +160,7 @@ export const Widget = React.memo(() => {
       setState([]);
     }
     setLoading(false);
-  }, [visible, refresh]);
+  }, [visible, refresh, exclusionList]);
 
   // Server socket for real-time updates
   useServerSocket(
