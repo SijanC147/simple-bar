@@ -2,3 +2,24 @@
 .idea
 /node_modules
 yarn.lock
+
+# Serena MCP project data (cache, memories, project config)
+.serena/
+
+# Claude MCP project data (cache, memories, project config)
+.claude/settings.local.json
+
+# Oh My Claude (OmC) project data — runtime state/cache; skills are the exception
+!.omc/
+.omc/*
+!.omc/skills/
+!.omc/skills/**
+
+# Legacy OMX runtime (if present)
+.omx/
+
+# Backups
+*.bak
+
+# Logs
+.logs/
