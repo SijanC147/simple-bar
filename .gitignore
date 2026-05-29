@@ -23,3 +23,6 @@ yarn.lock
 
 # Logs
 .logs/
+
+# Private, fork-only icon components (never pushed)
+lib/components/icons/private/
