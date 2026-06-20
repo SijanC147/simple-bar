@@ -26,6 +26,7 @@ export const Widget = React.memo(() => {
     hideWifiIfDisabled,
     toggleWifiOnClick,
     networkDevice,
+    ssidSource,
     hideNetworkName,
     showOnDisplay,
     showIcon,
@@ -55,22 +56,23 @@ export const Widget = React.memo(() => {
    */
   const getWifi = React.useCallback(async () => {
     if (!visible) return;
+    const ssidCommand =
+      ssidSource === "networksetup"
+        ? `networksetup -getairportnetwork ${networkDevice} | sed 's/.*Network: //'`
+        : `system_profiler SPAirPortDataType | awk '/Current Network/ {getline;$1=$1;print $0 | "tr -d ':'";exit}'`;
     const [status, ssid] = await Promise.all([
       Utils.cachedRun(
         `ifconfig ${networkDevice} | grep status | cut -c 10-`,
         refresh,
       ),
-      Utils.cachedRun(
-        `system_profiler SPAirPortDataType | awk '/Current Network/ {getline;$1=$1;print $0 | "tr -d ':'";exit}'`,
-        refresh,
-      ),
+      Utils.cachedRun(ssidCommand, refresh),
     ]);
     setState({
       status: Utils.cleanupOutput(status),
       ssid: Utils.cleanupOutput(ssid),
     });
     setLoading(false);
-  }, [networkDevice, visible, refresh]);
+  }, [networkDevice, ssidSource, visible, refresh]);
 
   useServerSocket("wifi", visible, getWifi, resetWidget, setLoading);
   useWidgetRefresh(visible, getWifi, refresh);
