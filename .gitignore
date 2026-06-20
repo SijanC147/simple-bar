@@ -26,3 +26,6 @@ yarn.lock
 
 # Private, fork-only icon components (never pushed)
 lib/components/icons/private/
+
+# Local MCP config — contains secrets, never pushed (public fork)
+.mcp.json
