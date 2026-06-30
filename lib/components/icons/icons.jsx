@@ -156,6 +156,7 @@ export const KeyboardMaestro = React.lazy(
   () => import("./library/keyboard-maestro.jsx"),
 );
 export const Keynote = React.lazy(() => import("./library/keynote.jsx"));
+export const Kitty = React.lazy(() => import("./library/kitty.jsx"));
 export const LeagueOfLegends = React.lazy(
   () => import("./library/league-of-legends.jsx"),
 );
